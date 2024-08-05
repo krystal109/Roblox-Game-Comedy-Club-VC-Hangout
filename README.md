@@ -1,3 +1,3 @@
-# Roblox-Game-Comedy-Club-VC-Hangout
+# Roblox Game: Comedy Club for Voicechat
 
 Lua Language
