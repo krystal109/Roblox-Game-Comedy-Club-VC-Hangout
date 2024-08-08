@@ -1,0 +1,44 @@
+local queueButton = script.Parent
+local stagePart = game.Workspace.Stage -- Ensure 'Stage' is the correct part name
+local player = game.Players.LocalPlayer
+local queue = {}
+
+-- Function to update the queue button text based on position in the queue
+local function updateQueueButtonText()
+	local index = table.find(queue, player)
+	if not index then
+		queueButton.Text = "Join Queue"
+	else
+		local positions = {"up next!", "2nd in line", "3rd in line", "4th in line", "5th in line", "6th in line", "7th in line", "8th in line", "9th in line", "10th in line"}
+		queueButton.Text = "You're " .. (positions[index] or tostring(index) .. "th in line")
+	end
+end
+
+-- Function to manage visibility of the queue button
+local function updateQueueButtonVisibility()
+	local isOccupied = stagePart:GetAttribute("Occupied")
+	local isCurrentPerformer = stagePart:GetAttribute("CurrentPerformer") == player.UserId
+	if isOccupied and not isCurrentPerformer then
+		queueButton.Visible = true
+	else
+		queueButton.Visible = false
+		queue = {} -- Clear queue when no one is on stage
+	end
+end
+
+-- Connect to changes on the stage's 'Occupied' attribute to update button visibility
+stagePart:GetAttributeChangedSignal("Occupied"):Connect(updateQueueButtonVisibility)
+stagePart:GetAttributeChangedSignal("CurrentPerformer"):Connect(updateQueueButtonVisibility)
+
+-- Handle queue button clicks
+queueButton.MouseButton1Click:Connect(function()
+	if not table.find(queue, player) then
+		table.insert(queue, player)
+		updateQueueButtonText()
+	end
+end)
+
+-- Initialize button state and visibility based on current stage status
+updateQueueButtonText()
+updateQueueButtonVisibility()
+
