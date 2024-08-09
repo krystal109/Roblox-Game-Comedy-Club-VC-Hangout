@@ -1,0 +1,4 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local stageOccupied = Instance.new("BoolValue", ReplicatedStorage)
+stageOccupied.Name = "StageOccupied"
+stageOccupied.Value = false
