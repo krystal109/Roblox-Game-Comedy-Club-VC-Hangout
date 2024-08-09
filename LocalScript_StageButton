@@ -1,59 +1,42 @@
 local button = script.Parent
 local player = game.Players.LocalPlayer
 local onStage = false
-local stagePosition = Vector3.new(2.83, 8.884, 16.864) 
-local offset = Vector3.new(0, 0, -2)
-local stagePart = game.Workspace.Stage -- Replace 'Stage' with the actual part name
-
+local stagePosition = Vector3.new(2.83, 8.884, 16.864)
+local offStagePosition = Vector3.new(2.184, 4.768, 52.11) -- Off-stage position
+local stageOccupied = game.ReplicatedStorage:FindFirstChild("StageOccupied")
 
 local function updateButton()
-	if onStage then
-		button.Text = "Leave Stage"
-		button.BackgroundColor3 = Color3.new(1, 0, 0) -- Red background
+	if stageOccupied.Value then
+		if player.Character:FindFirstChild("OnStage") then
+			button.Text = "Leave Stage"
+			button.BackgroundColor3 = Color3.new(1, 0, 0) -- Red background
+		else
+			button.Text = "Performance in progress"
+			button.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Orange background
+		end
 	else
 		button.Text = "Go on Stage"
-		button.BackgroundColor3 = Color3.new(0, 1, 0) -- Green background3
+		button.BackgroundColor3 = Color3.new(0, 1, 0) -- Green background
 	end
 end
 
--- Function to update the button for all players when the stage is occupied
-local function updateButtonForAll(occupied)
-	for _, plr in ipairs(game.Players:GetPlayers()) do
-		local plrButton = plr:WaitForChild("PlayerGui"):FindFirstChild("StageButton", true)
-		if plrButton then
-			if occupied then
-				plrButton.Text = "Performance in progress"
-				plrButton.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Orange background
-			else
-				plrButton.Text = "Go on Stage"
-				plrButton.BackgroundColor3 = Color3.new(0, 1, 0) -- Green background
-			end
-		end
-	end
-end
-
-local function leaveStage()
-	onStage = false
-	updateButton()
-	stagePart:SetAttribute("Occupied", false)
-	stagePart:SetAttribute("CurrentPerformer", nil)  -- Clears the performer attribute when leaving the stage
-	updateButtonForAll(false)  -- Update button state for all players
-	
-	
-	if player.Character then
-		player.Character:SetPrimaryPartCFrame(CFrame.new(2.184, 4.768, 52.11)) -- Replace with off-stage position
-	end
-end
+-- Listen for changes in the stage occupation status
+stageOccupied.Changed:Connect(updateButton)
 
 button.MouseButton1Click:Connect(function()
-	if onStage then  -- If already on stage and wants to leave
-		leaveStage()
-	elseif not stagePart:GetAttribute("Occupied") then
+	if not stageOccupied.Value and not player.Character:FindFirstChild("OnStage") then
 		player.Character:SetPrimaryPartCFrame(CFrame.new(stagePosition))
-		stagePart:SetAttribute("Occupied", true)
-		stagePart:SetAttribute("CurrentPerformer", player.UserId)  -- Set the performer attribute when going on stage
-		onStage = true
+		local tag = Instance.new("BoolValue", player.Character)
+		tag.Name = "OnStage"
+		stageOccupied.Value = true  -- Lock the stage for this player
 		updateButton()
-		updateButtonForAll(true)
+	elseif player.Character:FindFirstChild("OnStage") then
+		player.Character:SetPrimaryPartCFrame(CFrame.new(offStagePosition))
+		player.Character:FindFirstChild("OnStage"):Destroy()
+		stageOccupied.Value = false -- Free the stage
+		updateButton()
 	end
 end)
+
+-- Initialize button state
+updateButton()
